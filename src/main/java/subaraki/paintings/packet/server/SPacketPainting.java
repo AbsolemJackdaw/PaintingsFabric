@@ -74,7 +74,6 @@ public class SPacketPainting implements IPacketBase {
 
     @Override
     public void encrypt(int id) {
-
         NetworkHandler.NETWORK.registerMessage(id, SPacketPainting.class, SPacketPainting::encode, SPacketPainting::new, SPacketPainting::handle);
     }
 }

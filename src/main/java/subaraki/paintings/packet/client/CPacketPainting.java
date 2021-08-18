@@ -18,6 +18,7 @@ public class CPacketPainting implements IPacketBase {
 
     private int entityID;
     private String resLocNames[];
+
     public CPacketPainting() {
 
     }

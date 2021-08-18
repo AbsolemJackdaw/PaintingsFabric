@@ -12,9 +12,10 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.decoration.Motive;
-import subaraki.paintings.mod.ConfigData;
-import subaraki.paintings.packet.NetworkHandler;
-import subaraki.paintings.packet.server.SPacketPainting;
+import subaraki.paintings.mixins.ScreenAccessor;
+import subaraki.paintings.mod.Paintings;
+
+import java.util.List;
 
 public class PaintingScreen extends Screen {
 
@@ -22,7 +23,7 @@ public class PaintingScreen extends Screen {
     final int START_Y = 30;
     final int GAP = 5;
     private final int entityID;
-    private final Button defaultButton = new Button(0, 0, 0, 0, new TextComponent("default"), (Button) -> {
+    private final Button defaultButton = new Button(0, 0, 0, 0, new TextComponent("default"), Button -> {
     });
     private Motive[] resLocs;
     private int scrollbarscroll = 0;
@@ -71,7 +72,7 @@ public class PaintingScreen extends Screen {
             }
 
             this.addRenderableWidget(new PaintingButton(posx, posy, type.getWidth(), type.getHeight(), new TextComponent(""), (Button) -> {
-                NetworkHandler.NETWORK.sendToServer(new SPacketPainting(type, this.entityID));
+                //TODO NetworkHandler.NETWORK.sendToServer(new SPacketPainting(type, this.entityID));
                 this.removed();
                 this.onClose();
 
@@ -83,8 +84,7 @@ public class PaintingScreen extends Screen {
         }
 
         // call last time for last line
-        centerRow(rowstart, this.renderables.size() - 1);
-
+        centerRow(rowstart, getRenderables().size() - 1);
     }
 
     private void centerRow(int start, int end) {
@@ -102,7 +102,7 @@ public class PaintingScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack stack, int mouseX, int mouseY, float p_render_3_) {
+    public void render(PoseStack stack, int mouseX, int mouseY, float f) {
 
         this.renderBackground(stack);
 
@@ -113,11 +113,11 @@ public class PaintingScreen extends Screen {
 
         RenderSystem.enableScissor(START_X * scale, START_Y * scale, width * scale, (height - (START_Y * 2)) * scale);
 
-        super.render(stack, mouseX, mouseY, p_render_3_);
+        super.render(stack, mouseX, mouseY, f);
 
         RenderSystem.disableScissor();
 
-        if (!renderables.isEmpty()) {
+        if (!getRenderables().isEmpty()) {
             drawFakeScrollBar(stack);
         }
         drawCenteredString(stack, font, title, width / 2, START_Y / 2, 0xffffff);
@@ -128,7 +128,7 @@ public class PaintingScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double mouseScroll) {
 
-        AbstractWidget last = getAbstractWidget(renderables.size() - 1);
+        AbstractWidget last = getAbstractWidget(getRenderables().size() - 1);
         AbstractWidget first = getAbstractWidget(0);
 
         int forsee_bottom_limit = (int) (last.y + last.getHeight() + (mouseScroll * 16));
@@ -155,7 +155,7 @@ public class PaintingScreen extends Screen {
         amountY *= -1d;
         amountY /= 2d;
 
-        AbstractWidget last = getAbstractWidget(renderables.size() - 1);
+        AbstractWidget last = getAbstractWidget(getRenderables().size() - 1);
         AbstractWidget first = getAbstractWidget(0);
 
         int forsee_bottom_limit = (int) (last.y + last.getHeight() + (amountY * 16));
@@ -179,26 +179,23 @@ public class PaintingScreen extends Screen {
 
         scrollbarscroll -= scroll * 16;
 
-        for (Widget w : this.renderables) {
+        for (Widget w : getRenderables()) {
             getAbstractWidget(w).y += scroll * 16;
         }
     }
 
     private void drawToolTips(PoseStack mat, int mouseX, int mouseY) {
 
-        if (!ConfigData.show_painting_size)
+        if (!Paintings.config.show_painting_size)
             return;
-        for (Widget guiButton : renderables) {
-            if (guiButton instanceof PaintingButton) {
-                PaintingButton button = (PaintingButton) guiButton;
-                if (button.isMouseOver(mouseX, mouseY)) {
-                    TextComponent text = new TextComponent(button.getWidth() / 16 + "x" + button.getHeight() / 16);
-                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, text);
+        for (Widget guiButton : getRenderables()) {
+            if (guiButton instanceof PaintingButton button && button.isMouseOver(mouseX, mouseY)) {
+                TextComponent text = new TextComponent(button.getWidth() / 16 + "x" + button.getHeight() / 16);
+                HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, text);
 
-                    Style style = Style.EMPTY.withHoverEvent(hover);
+                Style style = Style.EMPTY.withHoverEvent(hover);
 
-                    this.renderComponentHoverEffect(mat, style, width / 2 - font.width(text.getContents()) - 4, height - START_Y / 4);
-                }
+                this.renderComponentHoverEffect(mat, style, width / 2 - font.width(text.getContents()) - 4, height - START_Y / 4);
             }
         }
     }
@@ -206,20 +203,20 @@ public class PaintingScreen extends Screen {
     private void drawFakeScrollBar(PoseStack mat) {
 
         int top = getAbstractWidget(0).y;
-        int bot = getAbstractWidget(renderables.size() - 1).y + getAbstractWidget(renderables.size() - 1).getHeight();
+        int bot = getAbstractWidget(getRenderables().size() - 1).y + getAbstractWidget(getRenderables().size() - 1).getHeight();
 
         // get total size for buttons drawn
         float totalSize = (bot - top) + (GAP);
         float containerSize = height - START_Y * 2;
 
         // relative % of the scale between the buttons drawn and the screen size
-        float percent = (((float) containerSize / (float) totalSize) * 100f);
+        float percent = ((containerSize / totalSize) * 100f);
 
         if (percent < 100) {
 
             float sizeBar = (containerSize / 100f * percent);
 
-            float relativeScroll = ((float) scrollbarscroll / 100f * percent);
+            float relativeScroll = (scrollbarscroll / 100f * percent);
 
             // what kind of dumbfuck decided it was intelligent to have 'fill' fill in from
             // left to right
@@ -240,22 +237,26 @@ public class PaintingScreen extends Screen {
 
     private AbstractWidget getAbstractWidget(Widget widget) {
 
-        if (widget instanceof AbstractWidget)
-            return (AbstractWidget) widget;
+        if (widget instanceof AbstractWidget abstractWidget)
+            return abstractWidget;
 
         return defaultButton;
     }
 
     private AbstractWidget getAbstractWidget(int index) {
 
-        if (index < 0 || index > this.renderables.size())
+        if (index < 0 || index > getRenderables().size())
             return defaultButton;
 
-        Widget w = this.renderables.get(index);
+        Widget w = getRenderables().get(index);
 
-        if (w instanceof AbstractWidget)
-            return (AbstractWidget) w;
+        if (w instanceof AbstractWidget abstractWidget)
+            return abstractWidget;
 
         return defaultButton;
+    }
+
+    List<Widget> getRenderables() {
+        return ((ScreenAccessor) this).getRenderables();
     }
 }

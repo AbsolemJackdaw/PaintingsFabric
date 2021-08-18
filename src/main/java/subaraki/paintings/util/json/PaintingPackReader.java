@@ -1,12 +1,9 @@
 package subaraki.paintings.util.json;
 
 import com.google.gson.*;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.decoration.Motive;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import subaraki.paintings.mod.Paintings;
 
 import java.io.BufferedReader;
@@ -21,31 +18,30 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-@EventBusSubscriber(modid = Paintings.MODID, bus = Bus.FORGE)
 public class PaintingPackReader {
 
     private static ArrayList<PaintingEntry> addedPaintings = new ArrayList<>();
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public static void registerreloadListener(AddReloadListenerEvent event) {
 
-//        event.addListener((ResourceManagerReloadListener) ((resourceManager) -> {
-//            new PaintingPackReader().init();
-//        }));
+        event.addListener((ResourceManagerReloadListener) ((resourceManager) -> {
+            new PaintingPackReader().init();
+        }));
 
-    }
+    }*/
 
-    public static void registerToMinecraft(RegistryEvent.Register<Motive> event) {
+    public static void registerToMinecraft() {
 
         for (PaintingEntry entry : addedPaintings) {
-            Motive painting = new Motive(entry.getSizeX(), entry.getSizeY()).setRegistryName(Paintings.MODID, entry.getRefName());
-            event.getRegistry().register(painting);
-            Paintings.LOG.info("registered painting " + painting.getRegistryName());
+            ResourceLocation name = new ResourceLocation(Paintings.MODID, entry.getRefName());
+            Registry.register(Registry.MOTIVE, name, new Motive(entry.getSizeX(), entry.getSizeY()));
+            Paintings.LOG.info("Registered painting " + name);
         }
     }
 
     /**
-     * called once on mod clas initialization. the loadFromJson called in here reads
+     * called once on mod class initialization. the loadFromJson called in here reads
      * json files directly out of a directory.
      */
     public PaintingPackReader init() {
@@ -190,21 +186,19 @@ public class PaintingPackReader {
                                 sizeSquare = jsonObject.get("square").getAsInt();
                             }
 
-                            if (sizeSquare == 0)
-                                if ((sizeX == 0 || sizeY == 0)) {
-                                    Paintings.LOG.error("Tried loading a painting where one of the sides was 0 ! ");
-                                    Paintings.LOG.error("Painting name is : " + textureName);
-                                    Paintings.LOG.error("Skipping...");
-                                    continue;
-                                }
+                            if (sizeSquare == 0 && (sizeX == 0 || sizeY == 0)) {
+                                Paintings.LOG.error("Tried loading a painting where one of the sides was 0 ! ");
+                                Paintings.LOG.error("Painting name is : " + textureName);
+                                Paintings.LOG.error("Skipping...");
+                                continue;
+                            }
 
-                            if (sizeSquare % 16 != 0)
-                                if ((sizeX % 16 != 0 || sizeY % 16 != 0)) {
-                                    Paintings.LOG.error("Tried loading a painting with a size that is not a multiple of 16 !! ");
-                                    Paintings.LOG.error("Painting name is : " + textureName);
-                                    Paintings.LOG.error("Skipping...");
-                                    continue;
-                                }
+                            if (sizeSquare % 16 != 0 && (sizeX % 16 != 0 || sizeY % 16 != 0)) {
+                                Paintings.LOG.error("Tried loading a painting with a size that is not a multiple of 16 !! ");
+                                Paintings.LOG.error("Painting name is : " + textureName);
+                                Paintings.LOG.error("Skipping...");
+                                continue;
+                            }
 
                             PaintingEntry entry = new PaintingEntry(textureName, sizeX, sizeY, sizeSquare);
                             Paintings.LOG.info(String.format("Loaded json painting %s , %d x %d", entry.getRefName(), entry.getSizeX(), entry.getSizeY()));

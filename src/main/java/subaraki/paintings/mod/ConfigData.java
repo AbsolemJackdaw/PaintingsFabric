@@ -1,52 +1,11 @@
 package subaraki.paintings.mod;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-import org.apache.commons.lang3.tuple.Pair;
-
 public class ConfigData {
 
-    public static final ServerConfig SERVER;
-    public static final ForgeConfigSpec SERVER_SPEC;
-    public static final ClientConfig CLIENT;
-    public static final ForgeConfigSpec CLIENT_SPEC;
-    public static boolean use_vanilla_only = false;
-    public static boolean use_selection_gui = true;
-    public static boolean cycle_paintings = false;
-    public static boolean show_painting_size = true;
-
-    static {
-        final Pair<ServerConfig, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(ServerConfig::new);
-        SERVER_SPEC = specPair.getRight();
-        SERVER = specPair.getLeft();
-    }
-
-    static {
-        final Pair<ClientConfig, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(ClientConfig::new);
-        CLIENT_SPEC = specPair.getRight();
-        CLIENT = specPair.getLeft();
-    }
-
-    public static void refreshClient() {
-
-        show_painting_size = CLIENT.show_painting_size.get();
-
-    }
-
-    public static void refreshServer() {
-
-        use_vanilla_only = SERVER.use_vanilla_only.get();
-        use_selection_gui = SERVER.use_selection_gui.get();
-        cycle_paintings = SERVER.cycle_paintings.get();
-
-    }
+/*
 
     public static class ServerConfig {
 
-        public final ForgeConfigSpec.BooleanValue use_vanilla_only;
-        public final ForgeConfigSpec.BooleanValue use_selection_gui;
-        public final ForgeConfigSpec.BooleanValue cycle_paintings;
-
-        ServerConfig(ForgeConfigSpec.Builder builder) {
 
             builder.push("general");
             use_vanilla_only = builder.comment("Pick true to only use the vanilla paintings and skip loading any other paintings")
@@ -71,5 +30,5 @@ public class ConfigData {
             builder.pop();
 
         }
-    }
+    }*/
 }

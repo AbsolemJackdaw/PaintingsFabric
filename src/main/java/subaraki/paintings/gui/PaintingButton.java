@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.decoration.Motive;
@@ -18,7 +19,8 @@ public class PaintingButton extends Button {
     public PaintingButton(int x, int y, int w, int h, Component text, OnPress onPress, Motive pt) {
 
         super(x, y, w, h, text, onPress);
-        String combo = pt.getRegistryName().getNamespace() + ":textures/painting/" + pt.getRegistryName().getPath() + ".png";
+        ResourceLocation rl = Registry.MOTIVE.getKey(pt);
+        String combo = rl.getNamespace() + ":textures/painting/" + rl.getPath() + ".png";
         this.resLoc = new ResourceLocation(combo);
     }
 
