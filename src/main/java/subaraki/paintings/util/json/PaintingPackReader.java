@@ -22,15 +22,6 @@ public class PaintingPackReader {
 
     private static ArrayList<PaintingEntry> addedPaintings = new ArrayList<>();
 
-    /*@SubscribeEvent
-    public static void registerreloadListener(AddReloadListenerEvent event) {
-
-        event.addListener((ResourceManagerReloadListener) ((resourceManager) -> {
-            new PaintingPackReader().init();
-        }));
-
-    }*/
-
     public static void registerToMinecraft() {
         for (PaintingEntry entry : addedPaintings) {
             ResourceLocation name = new ResourceLocation(Paintings.MODID, entry.getRefName());

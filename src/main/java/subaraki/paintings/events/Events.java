@@ -1,4 +1,4 @@
-package subaraki.paintings.util;
+package subaraki.paintings.events;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
@@ -17,7 +17,9 @@ import net.minecraft.world.entity.decoration.Motive;
 import net.minecraft.world.entity.decoration.Painting;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import subaraki.paintings.network.ClientNetwork;
 import subaraki.paintings.mod.Paintings;
+import subaraki.paintings.util.ArtComparator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -157,7 +159,7 @@ public class Events {
                                 for (ResourceLocation resLoc : names) {
                                     buf.writeUtf(resLoc.toString());
                                 }
-                                ServerPlayNetworking.send(serverPlayer, Paintings.CLIENT_PACKET, buf);
+                                ServerPlayNetworking.send(serverPlayer, ClientNetwork.CLIENT_PACKET, buf);
                             }
                         }
                         return InteractionResult.SUCCESS;

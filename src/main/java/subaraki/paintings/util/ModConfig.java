@@ -1,4 +1,4 @@
-package subaraki.paintings.mod;
+package subaraki.paintings.util;
 
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;

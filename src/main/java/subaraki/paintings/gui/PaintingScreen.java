@@ -16,6 +16,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.decoration.Motive;
+import subaraki.paintings.network.ServerNetwork;
 import subaraki.paintings.mixins.ScreenMixin;
 import subaraki.paintings.mod.Paintings;
 
@@ -76,7 +77,7 @@ public class PaintingScreen extends Screen {
                 String name = Registry.MOTIVE.getKey(type).toString();
                 buf.writeUtf(Registry.MOTIVE.getKey(type).toString());
                 buf.writeInt(entityID);
-                ClientPlayNetworking.send(Paintings.SERVER_PACKET, buf);
+                ClientPlayNetworking.send(ServerNetwork.SERVER_PACKET, buf);
                 this.removed();
                 this.onClose();
 
