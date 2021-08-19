@@ -4,10 +4,14 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.decoration.Motive;
@@ -15,6 +19,7 @@ import net.minecraft.world.entity.decoration.Painting;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import subaraki.paintings.mod.Paintings;
+import subaraki.paintings.packet.NetworkHandler;
 import subaraki.paintings.util.ArtComparator;
 
 import java.util.ArrayList;
@@ -33,7 +38,7 @@ public class Events {
         return Registry.MOTIVE.getKey(a).equals(Registry.MOTIVE.getKey(b));
     }
 
-    public void events() {
+    public static void events() {
         UseEntityCallback.EVENT.register((player, world, hand, target, hitResult) -> {
             if (Paintings.config.cycle_paintings)
                 if (target instanceof Painting painting && hand.equals(InteractionHand.MAIN_HAND)) {
@@ -92,30 +97,23 @@ public class Events {
 
             if (Paintings.config.use_selection_gui) {
                 ItemStack itemStack = player.getItemInHand(hand);
-
                 if (itemStack.getItem() == Items.PAINTING) {
                     Direction face = hitResult.getDirection();
                     BlockPos blockpos = hitResult.getBlockPos();
                     BlockPos actualPos = blockpos.relative(face);
-
                     boolean flag;
-
                     flag = face.getAxis().isHorizontal();
-
                     if (flag && player.mayUseItemAt(actualPos, face, itemStack)) {
-
                         Painting painting = new Painting(world, actualPos, face);
                         painting.setYRot(face.toYRot());
                         // Set position updates bounding box
                         painting.setPos(actualPos.getX(), blockpos.getY(), actualPos.getZ());
-
                         if (painting.survives()) {
                             player.swing(InteractionHand.MAIN_HAND); // recreate the animation of placing down an item
-
                             if (!player.isCreative())
                                 itemStack.shrink(1);
-
                             if (!world.isClientSide()) {
+                                ServerPlayer serverPlayer = (ServerPlayer) player;
                                 painting.playPlacementSound();
                                 world.addFreshEntity(painting);
                                 Motive originalArt = painting.motive;
@@ -163,9 +161,15 @@ public class Events {
 
                                 // send to one player only, the player that needs his Gui opened !!
                                 // this used to be send to all around, but then everyone got the gui opened
-                                //TODO NetworkHandler.NETWORK.send(PacketDistributor.PLAYER.with((() -> playerMP)), new CPacketPainting(painting, names));
+                                // Encodes needed data and sends to client
+                                FriendlyByteBuf buf = PacketByteBufs.create();
+                                buf.writeInt(painting.getId());
+                                buf.writeInt(names.length);
+                                for (ResourceLocation resLoc : names) {
+                                    buf.writeUtf(resLoc.toString());
+                                }
+                                ServerPlayNetworking.send(serverPlayer, NetworkHandler.CLIENT_PACKET, buf);
                             }
-
                         }
                         return InteractionResult.SUCCESS;
                     }

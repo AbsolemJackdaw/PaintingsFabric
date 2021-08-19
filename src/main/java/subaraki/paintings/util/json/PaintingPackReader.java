@@ -32,11 +32,10 @@ public class PaintingPackReader {
     }*/
 
     public static void registerToMinecraft() {
-
         for (PaintingEntry entry : addedPaintings) {
             ResourceLocation name = new ResourceLocation(Paintings.MODID, entry.getRefName());
             Registry.register(Registry.MOTIVE, name, new Motive(entry.getSizeX(), entry.getSizeY()));
-            Paintings.LOG.info("Registered painting " + name);
+            Paintings.LOGGER.info("Registered painting " + name);
         }
     }
 
@@ -46,7 +45,7 @@ public class PaintingPackReader {
      */
     public PaintingPackReader init() {
 
-        Paintings.LOG.info("loading json file and contents for paintings.");
+        Paintings.LOGGER.info("loading json file and contents for paintings.");
         loadFromJson();
 
         return this;
@@ -56,7 +55,7 @@ public class PaintingPackReader {
 
         // duplicate the gbase paintings template to our custom folder
         try {
-            Paintings.LOG.info("Copying Over Base Template to /paintings");
+            Paintings.LOGGER.info("Copying Over Base Template to /paintings");
             Path dir = Paths.get("./paintings");
 
             if (!Files.exists(dir)) {
@@ -66,11 +65,11 @@ public class PaintingPackReader {
                 // copyJsonToFolder
             }
         } catch (IOException e) {
-            Paintings.LOG.warn("************************************");
-            Paintings.LOG.warn("!*!*!*!*!");
-            Paintings.LOG.error("Copying Base Template Failed");
-            Paintings.LOG.warn("!*!*!*!*!");
-            Paintings.LOG.warn("************************************");
+            Paintings.LOGGER.warn("************************************");
+            Paintings.LOGGER.warn("!*!*!*!*!");
+            Paintings.LOGGER.error("Copying Base Template Failed");
+            Paintings.LOGGER.warn("!*!*!*!*!");
+            Paintings.LOGGER.warn("************************************");
 
             e.printStackTrace();
         }
@@ -79,13 +78,13 @@ public class PaintingPackReader {
         // to look for any other pack
         // and copy their json file over
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(Paths.get("./resourcepacks"));) {
-            Paintings.LOG.info("Reading out ResourcePacks to find painting related json files");
+            Paintings.LOGGER.info("Reading out ResourcePacks to find painting related json files");
 
             for (Path resourcePackPath : ds) {
                 if (resourcePackPath.toString().endsWith(".zip")) {
                     URI jarUri = new URI("jar:%s".formatted(resourcePackPath.toUri().getScheme()), resourcePackPath.toUri().getPath(), null);
 
-                    Paintings.LOG.info(jarUri);
+                    Paintings.LOGGER.info(jarUri);
 
                     try (FileSystem system = initFileSystem(jarUri)) {
                         Iterator<Path> resourcePacks = Files.walk(system.getPath("/")).iterator();
@@ -94,7 +93,7 @@ public class PaintingPackReader {
 
                             Path next = resourcePacks.next();
                             if (Files.isRegularFile(next) && next.toString().endsWith("json")) {
-                                Paintings.LOG.info("Candidate Found " + next.getFileName());
+                                Paintings.LOGGER.info("Candidate Found " + next.getFileName());
                                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(next)))) {
 
                                     Gson gson = new GsonBuilder().create();
@@ -103,9 +102,9 @@ public class PaintingPackReader {
 
                                     if (json.has("paintings")) {
                                         copyOver = true;
-                                        Paintings.LOG.info("Candidate Validated");
+                                        Paintings.LOGGER.info("Candidate Validated");
                                     } else {
-                                        Paintings.LOG.info("Candidate Not Valid, Rejected");
+                                        Paintings.LOGGER.info("Candidate Not Valid, Rejected");
                                     }
                                 }
 
@@ -123,19 +122,19 @@ public class PaintingPackReader {
             }
         } catch (IOException e) {
 
-            Paintings.LOG.warn("************************************");
-            Paintings.LOG.warn("!*!*!*!*!");
-            Paintings.LOG.error("An error occured reading resourcepacks for painting related files. Skipping process.");
-            Paintings.LOG.warn("!*!*!*!*!");
-            Paintings.LOG.warn("************************************");
+            Paintings.LOGGER.warn("************************************");
+            Paintings.LOGGER.warn("!*!*!*!*!");
+            Paintings.LOGGER.error("An error occured reading resourcepacks for painting related files. Skipping process.");
+            Paintings.LOGGER.warn("!*!*!*!*!");
+            Paintings.LOGGER.warn("************************************");
 
             e.printStackTrace();
         } catch (URISyntaxException e) {
-            Paintings.LOG.warn("************************************");
-            Paintings.LOG.warn("!*!*!*!*!");
-            Paintings.LOG.error("An error occured reading resourcepacks for painting related files. Skipping process.");
-            Paintings.LOG.warn("!*!*!*!*!");
-            Paintings.LOG.warn("************************************");
+            Paintings.LOGGER.warn("************************************");
+            Paintings.LOGGER.warn("!*!*!*!*!");
+            Paintings.LOGGER.error("An error occured reading resourcepacks for painting related files. Skipping process.");
+            Paintings.LOGGER.warn("!*!*!*!*!");
+            Paintings.LOGGER.warn("************************************");
 
             e.printStackTrace();
         }
@@ -145,10 +144,10 @@ public class PaintingPackReader {
         Path dir = Paths.get("./paintings");
 
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
-            Paintings.LOG.info("Started Reading all json files in /painting directory");
+            Paintings.LOGGER.info("Started Reading all json files in /painting directory");
 
             for (Path filesInDirPath : ds) {
-                Paintings.LOG.info(filesInDirPath);
+                Paintings.LOGGER.info(filesInDirPath);
                 Iterator<Path> jsonFiles = Files.walk(filesInDirPath).iterator();
 
                 while (jsonFiles.hasNext()) {
@@ -187,21 +186,21 @@ public class PaintingPackReader {
                             }
 
                             if (sizeSquare == 0 && (sizeX == 0 || sizeY == 0)) {
-                                Paintings.LOG.error("Tried loading a painting where one of the sides was 0 ! ");
-                                Paintings.LOG.error("Painting name is : " + textureName);
-                                Paintings.LOG.error("Skipping...");
+                                Paintings.LOGGER.error("Tried loading a painting where one of the sides was 0 ! ");
+                                Paintings.LOGGER.error("Painting name is : " + textureName);
+                                Paintings.LOGGER.error("Skipping...");
                                 continue;
                             }
 
                             if (sizeSquare % 16 != 0 && (sizeX % 16 != 0 || sizeY % 16 != 0)) {
-                                Paintings.LOG.error("Tried loading a painting with a size that is not a multiple of 16 !! ");
-                                Paintings.LOG.error("Painting name is : " + textureName);
-                                Paintings.LOG.error("Skipping...");
+                                Paintings.LOGGER.error("Tried loading a painting with a size that is not a multiple of 16 !! ");
+                                Paintings.LOGGER.error("Painting name is : " + textureName);
+                                Paintings.LOGGER.error("Skipping...");
                                 continue;
                             }
 
                             PaintingEntry entry = new PaintingEntry(textureName, sizeX, sizeY, sizeSquare);
-                            Paintings.LOG.info(String.format("Loaded json painting %s , %d x %d", entry.getRefName(), entry.getSizeX(), entry.getSizeY()));
+                            Paintings.LOGGER.info(String.format("Loaded json painting %s , %d x %d", entry.getRefName(), entry.getSizeX(), entry.getSizeY()));
                             addedPaintings.add(entry);
 
                         }
@@ -210,13 +209,13 @@ public class PaintingPackReader {
 
             }
         } catch (IOException e) {
-            Paintings.LOG.warn("************************************");
-            Paintings.LOG.warn("!*!*!*!*!");
-            Paintings.LOG.warn("No Painting Packs Detected. You will not be able to use ");
-            Paintings.LOG.warn("the Paintings ++ Mod correctly.");
-            Paintings.LOG.warn("Make sure to select or set some in the resourcepack gui !");
-            Paintings.LOG.warn("!*!*!*!*!");
-            Paintings.LOG.warn("************************************");
+            Paintings.LOGGER.warn("************************************");
+            Paintings.LOGGER.warn("!*!*!*!*!");
+            Paintings.LOGGER.warn("No Painting Packs Detected. You will not be able to use ");
+            Paintings.LOGGER.warn("the Paintings ++ Mod correctly.");
+            Paintings.LOGGER.warn("Make sure to select or set some in the resourcepack gui !");
+            Paintings.LOGGER.warn("!*!*!*!*!");
+            Paintings.LOGGER.warn("************************************");
 
             e.printStackTrace();
         }

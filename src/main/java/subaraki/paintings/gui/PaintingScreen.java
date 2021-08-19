@@ -3,10 +3,14 @@ package subaraki.paintings.gui;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.Registry;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
@@ -14,6 +18,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.decoration.Motive;
 import subaraki.paintings.mixins.ScreenAccessor;
 import subaraki.paintings.mod.Paintings;
+import subaraki.paintings.packet.NetworkHandler;
 
 import java.util.List;
 
@@ -25,13 +30,12 @@ public class PaintingScreen extends Screen {
     private final int entityID;
     private final Button defaultButton = new Button(0, 0, 0, 0, new TextComponent("default"), Button -> {
     });
-    private Motive[] resLocs;
+    private Motive[] types;
     private int scrollbarscroll = 0;
 
-    public PaintingScreen(Motive[] resLocs, int entityID) {
-
+    public PaintingScreen(Motive[] types, int entityID) {
         super(new TranslatableComponent("select.a.painting"));
-        this.resLocs = resLocs;
+        this.types = types;
         this.entityID = entityID;
     }
 
@@ -48,7 +52,7 @@ public class PaintingScreen extends Screen {
 
         final int END_X = width - 30;
 
-        int prevHeight = resLocs[0].getHeight(); // paintings are sorted from biggest to smallest at this point
+        int prevHeight = types[0].getHeight(); // paintings are sorted from biggest to smallest at this point
 
         int posx = START_X;
         int posy = GAP + START_Y;
@@ -56,23 +60,24 @@ public class PaintingScreen extends Screen {
         int index = 0;
         int rowstart = 0;
 
-        for (Motive type : resLocs) {
+        for (Motive type : types) {
             // if the painting size is different, or we're at the end of the row, jump down
             // and start at the beginning of the row again
             if (posx + type.getWidth() > END_X || prevHeight > type.getHeight()) {
-
                 centerRow(rowstart, index - 1);
-
                 rowstart = index;
-
                 posx = START_X;
                 posy += prevHeight + GAP;
                 prevHeight = type.getHeight(); // stays the same on row end, changes when heights change
 
             }
-
-            this.addRenderableWidget(new PaintingButton(posx, posy, type.getWidth(), type.getHeight(), new TextComponent(""), (Button) -> {
-                //TODO NetworkHandler.NETWORK.sendToServer(new SPacketPainting(type, this.entityID));
+            this.addRenderableWidget(new PaintingButton(posx, posy, type.getWidth(), type.getHeight(), new TextComponent(""), button -> {
+                //Encodes needed data and sends to server
+                FriendlyByteBuf buf = PacketByteBufs.create();
+                String name = Registry.MOTIVE.getKey(type).toString();
+                buf.writeUtf(Registry.MOTIVE.getKey(type).toString());
+                buf.writeInt(entityID);
+                ClientPlayNetworking.send(NetworkHandler.SERVER_PACKET, buf);
                 this.removed();
                 this.onClose();
 
@@ -84,7 +89,7 @@ public class PaintingScreen extends Screen {
         }
 
         // call last time for last line
-        centerRow(rowstart, getRenderables().size() - 1);
+        centerRow(rowstart, getRenderablesWithCast().size() - 1);
     }
 
     private void centerRow(int start, int end) {
@@ -103,32 +108,23 @@ public class PaintingScreen extends Screen {
 
     @Override
     public void render(PoseStack stack, int mouseX, int mouseY, float f) {
-
         this.renderBackground(stack);
-
         fill(stack, START_X, START_Y, width - START_X, height - START_Y, 0x44444444);
-
         Window window = minecraft.getWindow();
         int scale = (int) window.getGuiScale();
-
         RenderSystem.enableScissor(START_X * scale, START_Y * scale, width * scale, (height - (START_Y * 2)) * scale);
-
         super.render(stack, mouseX, mouseY, f);
-
         RenderSystem.disableScissor();
-
-        if (!getRenderables().isEmpty()) {
+        if (!getRenderablesWithCast().isEmpty()) {
             drawFakeScrollBar(stack);
         }
         drawCenteredString(stack, font, title, width / 2, START_Y / 2, 0xffffff);
-
         drawToolTips(stack, mouseX, mouseY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double mouseScroll) {
-
-        AbstractWidget last = getAbstractWidget(getRenderables().size() - 1);
+        AbstractWidget last = getAbstractWidget(getRenderablesWithCast().size() - 1);
         AbstractWidget first = getAbstractWidget(0);
 
         int forsee_bottom_limit = (int) (last.y + last.getHeight() + (mouseScroll * 16));
@@ -155,7 +151,7 @@ public class PaintingScreen extends Screen {
         amountY *= -1d;
         amountY /= 2d;
 
-        AbstractWidget last = getAbstractWidget(getRenderables().size() - 1);
+        AbstractWidget last = getAbstractWidget(getRenderablesWithCast().size() - 1);
         AbstractWidget first = getAbstractWidget(0);
 
         int forsee_bottom_limit = (int) (last.y + last.getHeight() + (amountY * 16));
@@ -179,7 +175,7 @@ public class PaintingScreen extends Screen {
 
         scrollbarscroll -= scroll * 16;
 
-        for (Widget w : getRenderables()) {
+        for (Widget w : getRenderablesWithCast()) {
             getAbstractWidget(w).y += scroll * 16;
         }
     }
@@ -188,7 +184,7 @@ public class PaintingScreen extends Screen {
 
         if (!Paintings.config.show_painting_size)
             return;
-        for (Widget guiButton : getRenderables()) {
+        for (Widget guiButton : getRenderablesWithCast()) {
             if (guiButton instanceof PaintingButton button && button.isMouseOver(mouseX, mouseY)) {
                 TextComponent text = new TextComponent(button.getWidth() / 16 + "x" + button.getHeight() / 16);
                 HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, text);
@@ -203,7 +199,7 @@ public class PaintingScreen extends Screen {
     private void drawFakeScrollBar(PoseStack mat) {
 
         int top = getAbstractWidget(0).y;
-        int bot = getAbstractWidget(getRenderables().size() - 1).y + getAbstractWidget(getRenderables().size() - 1).getHeight();
+        int bot = getAbstractWidget(getRenderablesWithCast().size() - 1).y + getAbstractWidget(getRenderablesWithCast().size() - 1).getHeight();
 
         // get total size for buttons drawn
         float totalSize = (bot - top) + (GAP);
@@ -245,10 +241,10 @@ public class PaintingScreen extends Screen {
 
     private AbstractWidget getAbstractWidget(int index) {
 
-        if (index < 0 || index > getRenderables().size())
+        if (index < 0 || index > getRenderablesWithCast().size())
             return defaultButton;
 
-        Widget w = getRenderables().get(index);
+        Widget w = getRenderablesWithCast().get(index);
 
         if (w instanceof AbstractWidget abstractWidget)
             return abstractWidget;
@@ -256,7 +252,7 @@ public class PaintingScreen extends Screen {
         return defaultButton;
     }
 
-    List<Widget> getRenderables() {
+    public List<Widget> getRenderablesWithCast() {
         return ((ScreenAccessor) this).getRenderables();
     }
 }
