@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.mixin.screen.ScreenAccessor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Widget;
@@ -16,7 +17,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.decoration.Motive;
-import subaraki.paintings.mixins.ScreenAccessor;
+import subaraki.paintings.mixins.ScreenMixin;
 import subaraki.paintings.mod.Paintings;
 import subaraki.paintings.packet.NetworkHandler;
 
@@ -253,6 +254,6 @@ public class PaintingScreen extends Screen {
     }
 
     public List<Widget> getRenderablesWithCast() {
-        return ((ScreenAccessor) this).getRenderables();
+        return ((ScreenMixin) this).getRenderables();
     }
 }
