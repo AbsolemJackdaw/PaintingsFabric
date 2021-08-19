@@ -5,7 +5,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.mixin.screen.ScreenAccessor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Widget;
@@ -19,7 +18,6 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.decoration.Motive;
 import subaraki.paintings.mixins.ScreenMixin;
 import subaraki.paintings.mod.Paintings;
-import subaraki.paintings.packet.NetworkHandler;
 
 import java.util.List;
 
@@ -78,7 +76,7 @@ public class PaintingScreen extends Screen {
                 String name = Registry.MOTIVE.getKey(type).toString();
                 buf.writeUtf(Registry.MOTIVE.getKey(type).toString());
                 buf.writeInt(entityID);
-                ClientPlayNetworking.send(NetworkHandler.SERVER_PACKET, buf);
+                ClientPlayNetworking.send(Paintings.SERVER_PACKET, buf);
                 this.removed();
                 this.onClose();
 

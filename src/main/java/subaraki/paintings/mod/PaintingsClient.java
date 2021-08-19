@@ -1,26 +1,20 @@
-package subaraki.paintings.packet;
+package subaraki.paintings.mod;
 
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.Motive;
 import net.minecraft.world.entity.decoration.Painting;
-import net.minecraft.world.level.Level;
-import subaraki.paintings.mod.Paintings;
 import subaraki.paintings.util.ClientReferences;
 
-public class NetworkHandler {
 
-    public static final ResourceLocation CLIENT_PACKET = new ResourceLocation(Paintings.MODID, "client_packet");
-    public static final ResourceLocation SERVER_PACKET = new ResourceLocation(Paintings.MODID, "server_packet");
-
-    public static void registerPacketHandlers() {
+public class PaintingsClient implements net.fabricmc.api.ClientModInitializer {
+    @Override
+    public void onInitializeClient() {
         //Handles when client packet is received on client
-        ClientPlayNetworking.registerGlobalReceiver(CLIENT_PACKET, (client, handler, buf, responseSender) -> {
+        ClientPlayNetworking.registerGlobalReceiver(Paintings.CLIENT_PACKET, (client, handler, buf, responseSender) -> {
             int entityId = buf.readInt();
             String[] resLocNames = new String[buf.readInt()];
             for (int i = 0; i < resLocNames.length; i++) {
@@ -46,23 +40,12 @@ public class NetworkHandler {
                 }
             });
         });
-        ServerPlayNetworking.registerGlobalReceiver(SERVER_PACKET, (server, player, handler, buf, responseSender) -> {
-            String name = buf.readUtf();
-            Motive type = Registry.MOTIVE.get(new ResourceLocation(name));
-            int entityID = buf.readInt();
-            server.execute(() -> {
-                Level level = player.level;
-                Entity entity = level.getEntity(entityID);
-                if (entity instanceof Painting painting) {
-                    Paintings.UTILITY.setArt(painting, type);
-                    Paintings.UTILITY.updatePaintingBoundingBox(painting);
-                    FriendlyByteBuf byteBuf = PacketByteBufs.create();
-                    byteBuf.writeInt(entityID);
-                    byteBuf.writeInt(1);
-                    byteBuf.writeUtf(Registry.MOTIVE.getKey(type).toString());
-                    ServerPlayNetworking.send(player, NetworkHandler.CLIENT_PACKET, byteBuf);
-                }
-            });
+        // quick hook to fix paintings not having the correct bounding box when reloading
+        // a world, and thus overlapping with other newly placed paintings
+        ClientEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            if (entity instanceof Painting painting) {
+                Paintings.UTILITY.updatePaintingBoundingBox(painting);
+            }
         });
     }
 }

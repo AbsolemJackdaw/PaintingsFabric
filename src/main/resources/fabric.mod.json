@@ -17,6 +17,9 @@
   "entrypoints": {
     "main": [
       "subaraki.paintings.mod.Paintings"
+    ],
+    "client": [
+      "subaraki.paintings.mod.PaintingsClient"
     ]
   },
   "mixins": [

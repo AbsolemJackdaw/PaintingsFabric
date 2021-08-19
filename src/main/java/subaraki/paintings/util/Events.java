@@ -1,6 +1,5 @@
-package subaraki.paintings;
+package subaraki.paintings.util;
 
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
@@ -19,8 +18,6 @@ import net.minecraft.world.entity.decoration.Painting;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import subaraki.paintings.mod.Paintings;
-import subaraki.paintings.packet.NetworkHandler;
-import subaraki.paintings.util.ArtComparator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +27,6 @@ import java.util.stream.Collectors;
 public class Events {
 
     private static boolean equalSizes(Motive a, Motive b) {
-
         return a.getWidth() == b.getWidth() && a.getHeight() == b.getHeight();
     }
 
@@ -80,13 +76,6 @@ public class Events {
                     }
                 }
             return InteractionResult.PASS;
-        });
-        // quick hook to fix paintings not having the correct bounding box when reloading
-        // a world, and thus overlapping with other newly placed paintings
-        ClientEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-            if (entity instanceof Painting painting) {
-                Paintings.UTILITY.updatePaintingBoundingBox(painting);
-            }
         });
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
             if (entity instanceof Painting painting) {
@@ -168,7 +157,7 @@ public class Events {
                                 for (ResourceLocation resLoc : names) {
                                     buf.writeUtf(resLoc.toString());
                                 }
-                                ServerPlayNetworking.send(serverPlayer, NetworkHandler.CLIENT_PACKET, buf);
+                                ServerPlayNetworking.send(serverPlayer, Paintings.CLIENT_PACKET, buf);
                             }
                         }
                         return InteractionResult.SUCCESS;
