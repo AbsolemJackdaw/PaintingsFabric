@@ -16,22 +16,22 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.decoration.Motive;
-import subaraki.paintings.network.ServerNetwork;
-import subaraki.paintings.mixins.ScreenMixin;
+import subaraki.paintings.mixins.ScreenAccessor;
 import subaraki.paintings.mod.Paintings;
+import subaraki.paintings.network.ServerNetwork;
 
 import java.util.List;
 
 public class PaintingScreen extends Screen {
 
-    final int START_X = 10;
-    final int START_Y = 30;
-    final int GAP = 5;
+    public static final int START_X = 10;
+    public static final int START_Y = 30;
+    public static final int GAP = 5;
     private final int entityID;
-    private final Button defaultButton = new Button(0, 0, 0, 0, new TextComponent("default"), Button -> {
+    private final Button defaultButton = new Button(0, 0, 0, 0, new TextComponent("default"), button -> {
     });
-    private Motive[] types;
-    private int scrollbarscroll = 0;
+    private final Motive[] types;
+    private int scrollBarScroll = 0;
 
     public PaintingScreen(Motive[] types, int entityID) {
         super(new TranslatableComponent("select.a.painting"));
@@ -41,17 +41,13 @@ public class PaintingScreen extends Screen {
 
     @Override
     protected void init() {
-
         super.init();
-
         this.addButtons();
-        scrollbarscroll = 0;
+        scrollBarScroll = 0;
     }
 
     private void addButtons() {
-
         final int END_X = width - 30;
-
         int prevHeight = types[0].getHeight(); // paintings are sorted from biggest to smallest at this point
 
         int posx = START_X;
@@ -74,7 +70,6 @@ public class PaintingScreen extends Screen {
             this.addRenderableWidget(new PaintingButton(posx, posy, type.getWidth(), type.getHeight(), new TextComponent(""), button -> {
                 //Encodes needed data and sends to server
                 FriendlyByteBuf buf = PacketByteBufs.create();
-                String name = Registry.MOTIVE.getKey(type).toString();
                 buf.writeUtf(Registry.MOTIVE.getKey(type).toString());
                 buf.writeInt(entityID);
                 ClientPlayNetworking.send(ServerNetwork.SERVER_PACKET, buf);
@@ -127,16 +122,16 @@ public class PaintingScreen extends Screen {
         AbstractWidget last = getAbstractWidget(getRenderablesWithCast().size() - 1);
         AbstractWidget first = getAbstractWidget(0);
 
-        int forsee_bottom_limit = (int) (last.y + last.getHeight() + (mouseScroll * 16));
-        int bottom_limit = height - START_Y - last.getHeight();
+        int foreseeBottomLimit = (int) (last.y + last.getHeight() + (mouseScroll * 16));
+        int bottomLimit = height - START_Y - last.getHeight();
 
-        int forsee_top_limit = (int) (first.y + mouseScroll * 16);
-        int top_limit = GAP + START_Y;
+        int foreseeTopLimit = (int) (first.y + mouseScroll * 16);
+        int topLimit = GAP + START_Y;
         // scrolling up
-        if (mouseScroll < 0.0 && forsee_bottom_limit < bottom_limit)
+        if (mouseScroll < 0.0 && foreseeBottomLimit < bottomLimit)
             return super.mouseScrolled(mouseX, mouseY, mouseScroll);
         // down
-        if (mouseScroll > 0.0 && forsee_top_limit > top_limit)
+        if (mouseScroll > 0.0 && foreseeTopLimit > topLimit)
             return super.mouseScrolled(mouseX, mouseY, mouseScroll);
 
         move(mouseScroll);
@@ -154,34 +149,29 @@ public class PaintingScreen extends Screen {
         AbstractWidget last = getAbstractWidget(getRenderablesWithCast().size() - 1);
         AbstractWidget first = getAbstractWidget(0);
 
-        int forsee_bottom_limit = (int) (last.y + last.getHeight() + (amountY * 16));
-        int bottom_limit = height - START_Y - last.getHeight();
+        int foreseeBottomLimit = (int) (last.y + last.getHeight() + (amountY * 16));
+        int bottomLimit = height - START_Y - last.getHeight();
 
-        int forsee_top_limit = (int) (first.y + amountY * 16);
-        int top_limit = GAP + START_Y;
+        int foreseeTopLimit = (int) (first.y + amountY * 16);
+        int topLimit = GAP + START_Y;
         // scrolling up
-        if (amountY < 0.0 && forsee_bottom_limit < bottom_limit)
+        if (amountY < 0.0 && foreseeBottomLimit < bottomLimit)
             return super.mouseDragged(mouseX, mouseY, buttonID, amountX, amountY);
         // down
-        if (amountY > 0.0 && forsee_top_limit > top_limit)
+        if (amountY > 0.0 && foreseeTopLimit > topLimit)
             return super.mouseDragged(mouseX, mouseY, buttonID, amountX, amountY);
-
         move(amountY);
-
         return super.mouseDragged(mouseX, mouseY, buttonID, amountX, amountY);
     }
 
     private void move(double scroll) {
-
-        scrollbarscroll -= scroll * 16;
-
+        scrollBarScroll -= scroll * 16;
         for (Widget w : getRenderablesWithCast()) {
             getAbstractWidget(w).y += scroll * 16;
         }
     }
 
     private void drawToolTips(PoseStack mat, int mouseX, int mouseY) {
-
         if (!Paintings.config.show_painting_size)
             return;
         for (Widget guiButton : getRenderablesWithCast()) {
@@ -197,7 +187,6 @@ public class PaintingScreen extends Screen {
     }
 
     private void drawFakeScrollBar(PoseStack mat) {
-
         int top = getAbstractWidget(0).y;
         int bot = getAbstractWidget(getRenderablesWithCast().size() - 1).y + getAbstractWidget(getRenderablesWithCast().size() - 1).getHeight();
 
@@ -211,48 +200,40 @@ public class PaintingScreen extends Screen {
         if (percent < 100) {
 
             float sizeBar = (containerSize / 100f * percent);
+            float relativeScroll = (scrollBarScroll / 100f * percent);
 
-            float relativeScroll = (scrollbarscroll / 100f * percent);
-
-            // what kind of dumbfuck decided it was intelligent to have 'fill' fill in from
+            // what kind of dumb fuck decided it was intelligent to have 'fill' fill in from
             // left to right
-            // and fillgradient from right to fucking left ???
+            // and fill gradient from right to fucking left ???
 
             // this.fill(width - START_X, START_Y + (int) relativeScroll, width - START_X -
             // 4, START_Y + (int) relativeScroll + (int) sizeBar,
             // 0xff00ffff);
 
-            // draw a black background background
+            // draw a black background
             this.fillGradient(mat, width - START_X, START_Y, width, START_Y + (int) containerSize, 0x80000000, 0x80222222);
             // Draw scrollbar
             this.fillGradient(mat, width - START_X, START_Y + (int) relativeScroll, width, START_Y + (int) relativeScroll + (int) sizeBar, 0x80ffffff,
                     0x80222222);
-
         }
     }
 
     private AbstractWidget getAbstractWidget(Widget widget) {
-
         if (widget instanceof AbstractWidget abstractWidget)
             return abstractWidget;
-
         return defaultButton;
     }
 
     private AbstractWidget getAbstractWidget(int index) {
-
         if (index < 0 || index > getRenderablesWithCast().size())
             return defaultButton;
-
         Widget w = getRenderablesWithCast().get(index);
-
         if (w instanceof AbstractWidget abstractWidget)
             return abstractWidget;
-
         return defaultButton;
     }
 
     public List<Widget> getRenderablesWithCast() {
-        return ((ScreenMixin) this).getRenderables();
+        return ((ScreenAccessor) this).getRenderables();
     }
 }
