@@ -1,10 +1,12 @@
 package subaraki.paintings.network;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.Motive;
 import net.minecraft.world.entity.decoration.Painting;
@@ -31,6 +33,9 @@ public class ServerNetwork {
                     byteBuf.writeInt(entityID);
                     byteBuf.writeInt(1);
                     byteBuf.writeUtf(Registry.MOTIVE.getKey(type).toString());
+                    for (ServerPlayer serverPlayer : PlayerLookup.tracking(player)) {
+                        ServerPlayNetworking.send(serverPlayer, ClientNetwork.CLIENT_PACKET, byteBuf);
+                    }
                     ServerPlayNetworking.send(player, ClientNetwork.CLIENT_PACKET, byteBuf);
                 }
             });

@@ -17,8 +17,8 @@ import net.minecraft.world.entity.decoration.Motive;
 import net.minecraft.world.entity.decoration.Painting;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import subaraki.paintings.network.ClientNetwork;
 import subaraki.paintings.mod.Paintings;
+import subaraki.paintings.network.ClientNetwork;
 import subaraki.paintings.util.ArtComparator;
 
 import java.util.ArrayList;
@@ -151,7 +151,7 @@ public class Events {
                                 }
 
                                 // send to one player only, the player that needs his Gui opened !!
-                                // this used to be send to all around, but then everyone got the gui opened
+                                // this used to be sent to all around, but then everyone got the gui opened
                                 // Encodes needed data and sends to client
                                 FriendlyByteBuf buf = PacketByteBufs.create();
                                 buf.writeInt(painting.getId());
