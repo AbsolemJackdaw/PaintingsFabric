@@ -39,17 +39,14 @@ public class PaintingPackReader {
      * called once on mod class initialization. the loadFromJson called in here reads
      * json files directly out of a directory.
      */
-    public PaintingPackReader init() {
+    public void init() {
 
         Paintings.LOGGER.info("loading json file and contents for paintings.");
         loadFromJson();
-
-        return this;
     }
 
     private void loadFromJson() {
-
-        // duplicate the gbase paintings template to our custom folder
+        // duplicate the base paintings template to our custom folder
         try {
             Paintings.LOGGER.info("Copying Over Base Template to /paintings");
             Path dir = Paths.get("./paintings");
@@ -60,7 +57,7 @@ public class PaintingPackReader {
                 Files.copy(getClass().getResourceAsStream("/assets/paintings/paintings.json"), dir.resolve("paintings.json"));
                 // copyJsonToFolder
             }
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             Paintings.LOGGER.warn("************************************");
             Paintings.LOGGER.warn("!*!*!*!*!");
             Paintings.LOGGER.error("Copying Base Template Failed");
@@ -180,26 +177,22 @@ public class PaintingPackReader {
                             }
 
                             if (jsonObject.has("square")) {
-                                sizeSquare = jsonObject.get("square").getAsInt();
+                                sizeX = sizeY = jsonObject.get("square").getAsInt();
                             }
 
-                            if (sizeSquare == 0)
-                                if ((sizeX == 0 || sizeY == 0)) {
-                                    Paintings.LOGGER.error("Tried loading a painting where one of the sides was 0 ! ");
-                                    Paintings.LOGGER.error("Painting name is : " + textureName);
-                                    Paintings.LOGGER.error("Skipping...");
-                                    continue;
-                                }
+                            if (sizeX == 0 || sizeY == 0) {
+                                Paintings.LOGGER.error("Tried loading a painting where one of the sides was 0 ! ");
+                                Paintings.LOGGER.error("Painting name is : " + textureName);
+                                Paintings.LOGGER.error("Skipping...");
+                                continue;
+                            } else if (sizeX % 16 != 0 || sizeY % 16 != 0) {
+                                Paintings.LOGGER.error("Tried loading a painting with a size that is not a multiple of 16 !! ");
+                                Paintings.LOGGER.error("Painting name is : " + textureName);
+                                Paintings.LOGGER.error("Skipping...");
+                                continue;
+                            }
 
-                            if (sizeSquare % 16 != 0)
-                                if ((sizeX % 16 != 0 || sizeY % 16 != 0)) {
-                                    Paintings.LOGGER.error("Tried loading a painting with a size that is not a multiple of 16 !! ");
-                                    Paintings.LOGGER.error("Painting name is : " + textureName);
-                                    Paintings.LOGGER.error("Skipping...");
-                                    continue;
-                                }
-
-                            PaintingEntry entry = new PaintingEntry(textureName, sizeX, sizeY, sizeSquare);
+                            PaintingEntry entry = new PaintingEntry(textureName, sizeX, sizeY);
                             Paintings.LOGGER.info(String.format("Loaded json painting %s , %d x %d", entry.getRefName(), entry.getSizeX(), entry.getSizeY()));
                             addedPaintings.add(entry);
 

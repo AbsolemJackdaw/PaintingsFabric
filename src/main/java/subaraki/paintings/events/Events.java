@@ -19,7 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import subaraki.paintings.mod.Paintings;
 import subaraki.paintings.network.ClientNetwork;
-import subaraki.paintings.util.ArtComparator;
+import subaraki.paintings.util.PaintingUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,7 +48,7 @@ public class Events {
 
                         // it is important to sort the paintings from big to small so all same size
                         // paintings will be next to one another
-                        List<Motive> validArtsList = Registry.MOTIVE.stream().sorted(new ArtComparator()).collect(Collectors.toList());
+                        List<Motive> validArtsList = Registry.MOTIVE.stream().sorted(PaintingUtility.ART_COMPARATOR).collect(Collectors.toList());
                         boolean takeNext = false;
                         for (Motive type : validArtsList) {
                             if (equalSizes(original, type)) {
@@ -141,13 +141,12 @@ public class Events {
 
                                 Paintings.UTILITY.updatePaintingBoundingBox(painting); // reset bounding box
 
-                                Motive[] validArtsArray = validArts.toArray(new Motive[0]);
                                 // sort paintings from high to low, and from big to small
-                                Arrays.sort(validArtsArray, new ArtComparator());
+                                List<Motive> validArtsArray = validArts.stream().sorted(PaintingUtility.ART_COMPARATOR).toList();
 
-                                ResourceLocation[] names = new ResourceLocation[validArtsArray.length];
-                                for (int i = 0; i < validArtsArray.length; ++i) {
-                                    names[i] = Registry.MOTIVE.getKey(validArtsArray[i]);
+                                ResourceLocation[] names = new ResourceLocation[validArtsArray.size()];
+                                for (Motive m : validArtsArray) {
+                                    names[validArtsArray.indexOf(m)] = Registry.MOTIVE.getKey(m);
                                 }
 
                                 // send to one player only, the player that needs his Gui opened !!
@@ -156,9 +155,7 @@ public class Events {
                                 FriendlyByteBuf buf = PacketByteBufs.create();
                                 buf.writeInt(painting.getId());
                                 buf.writeInt(names.length);
-                                for (ResourceLocation resLoc : names) {
-                                    buf.writeUtf(resLoc.toString());
-                                }
+                                Arrays.stream(names).forEach(rl -> buf.writeUtf(rl.toString()));
                                 ServerPlayNetworking.send(serverPlayer, ClientNetwork.CLIENT_PACKET, buf);
                             }
                         }

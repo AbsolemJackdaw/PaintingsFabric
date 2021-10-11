@@ -9,12 +9,14 @@ import net.minecraft.world.entity.decoration.Painting;
 import subaraki.paintings.mod.Paintings;
 import subaraki.paintings.util.ClientReferences;
 
+import java.util.Arrays;
+
 public class ClientNetwork {
 
     public static final ResourceLocation CLIENT_PACKET = new ResourceLocation(Paintings.MODID, "client_packet");
 
 
-    public static void registerClientPackets(){
+    public static void registerClientPackets() {
         //Handles when client packet is received on client
         ClientPlayNetworking.registerGlobalReceiver(CLIENT_PACKET, (client, handler, buf, responseSender) -> {
             int entityId = buf.readInt();
@@ -33,11 +35,7 @@ public class ClientNetwork {
                     }
                 } else // we need to open the painting gui to select a painting
                 {
-                    Motive[] types = new Motive[resLocNames.length];
-                    int dex = 0;
-                    for (String path : resLocNames) {
-                        types[dex++] = Registry.MOTIVE.get(new ResourceLocation(path));
-                    }
+                    Motive[] types = Arrays.stream(resLocNames).map(path -> Registry.MOTIVE.get(new ResourceLocation(path))).toArray(Motive[]::new);
                     ClientReferences.openPaintingScreen(types, entityId);
                 }
             });

@@ -10,6 +10,8 @@ import net.minecraft.world.phys.AABB;
 
 public class PaintingUtility {
 
+    public static final ArtComparator ART_COMPARATOR = new ArtComparator();
+
     // copied this from vanilla , the original one is protected for some reason
     public void updatePaintingBoundingBox(HangingEntity painting) {
         if (painting.getDirection() != null) {
