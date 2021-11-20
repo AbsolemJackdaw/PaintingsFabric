@@ -8,8 +8,9 @@
     "Subaraki"
   ],
   "contact": {
-    "homepage": "https://www.curseforge.com/minecraft/mc-mods/paintings",
-    "sources": "https://github.com/ArtixAllMighty/PaintingsFabric"
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/paintings-fabric-edition",
+    "sources": "https://github.com/ArtixAllMighty/PaintingsFabric",
+    "issues": "https://github.com/ArtixAllMighty/PaintingsFabric/issues"
   },
   "license": "GNU V3",
   "icon": "banner.png",
