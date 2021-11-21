@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "paintings",
   "version": "${version}",
-  "name": "Paintings ++",
+  "name": "Paintings++",
   "description": "\nAdd more paintings to your game !! \nCheck out the wiki for more info !\nhttps://github.com/ArtixAllMighty/Paintings--/wiki\n\nEnjoy picking which painting you want to place down with the integrated Painting Selection GUI ! \n\nCredit for Serilum : https://www.curseforge.com/minecraft/mc-mods/cycle-paintings ",
   "authors": [
     "Subaraki"
@@ -29,6 +29,6 @@
   "depends": {
     "fabricloader": ">=0.11.3",
     "fabric": "*",
-    "java": ">=16"
+    "java": ">=17"
   }
 }
