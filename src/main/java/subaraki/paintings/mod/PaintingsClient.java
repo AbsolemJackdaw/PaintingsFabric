@@ -1,7 +1,7 @@
 package subaraki.paintings.mod;
 
-import subaraki.paintings.network.ClientNetwork;
 import subaraki.paintings.events.ClientEvents;
+import subaraki.paintings.network.ClientNetwork;
 
 
 public class PaintingsClient implements net.fabricmc.api.ClientModInitializer {

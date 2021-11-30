@@ -2,10 +2,9 @@ package subaraki.paintings.util.json;
 
 public class PaintingEntry {
 
+    private final String refName;
     private int sizeX = 16;
     private int sizeY = 16;
-
-    private final String refName;
 
     public PaintingEntry(String refName, int sizeX, int sizeY) {
         this.refName = refName;

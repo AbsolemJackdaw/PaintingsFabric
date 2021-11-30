@@ -166,7 +166,6 @@ public class PaintingPackReader {
 
                             int sizeX = 0;
                             int sizeY = 0;
-                            int sizeSquare = 0;
 
                             if (jsonObject.has("x")) {
                                 sizeX = jsonObject.get("x").getAsInt();

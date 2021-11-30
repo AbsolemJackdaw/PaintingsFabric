@@ -6,7 +6,7 @@ import subaraki.paintings.mod.Paintings;
 
 public class ClientEvents {
 
-    public static void fixBoundingBoxEvent(){
+    public static void fixBoundingBoxEvent() {
         // quick hook to fix paintings not having the correct bounding box when reloading
         // a world, and thus overlapping with other newly placed paintings
         ClientEntityEvents.ENTITY_LOAD.register((entity, world) -> {

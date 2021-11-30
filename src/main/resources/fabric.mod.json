@@ -5,7 +5,8 @@
   "name": "Paintings++",
   "description": "\nAdd more paintings to your game !! \nCheck out the wiki for more info !\nhttps://github.com/ArtixAllMighty/Paintings--/wiki\n\nEnjoy picking which painting you want to place down with the integrated Painting Selection GUI ! \n\nCredit for Serilum : https://www.curseforge.com/minecraft/mc-mods/cycle-paintings ",
   "authors": [
-    "Subaraki"
+    "Subaraki",
+    "StrikerRocker"
   ],
   "contact": {
     "homepage": "https://www.curseforge.com/minecraft/mc-mods/paintings-fabric-edition",
@@ -27,8 +28,10 @@
     "paintings.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.11.3",
+    "fabricloader": ">=0.12.0",
     "fabric": "*",
-    "java": ">=17"
+    "minecraft": "1.18.x",
+    "java": ">=17",
+    "cloth-config2": ">=6.0.42"
   }
 }
